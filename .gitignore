@@ -13,6 +13,12 @@
 /build
 **/dist
 
+# TypeScript build artifacts
+**/*.tsbuildinfo
+
+# Logs
+**/*.log
+
 # misc
 .DS_Store
 .env.local

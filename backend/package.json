@@ -1,35 +1,24 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "scripts": {
-    "start": "nodemon server.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "prisma db push",
-    "seed": "ts-node seed.ts",
-    "test": "vitest run",
-    "build": "tsc"
-  },
-  "prisma": {
-    "seed": "ts-node seed.ts"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/socket.io": "^3.0.2",
-    "nodemon": "^3.1.9",
-    "prisma": "5.22.0",
-    "prettier": "^3.4.2",
-    "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3",
-    "vitest": "^3.0.1"
-  },
-  "dependencies": {
-    "@prisma/client": "5.22.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "express": "^5.0.1",
-    "socket.io": "^4.8.1"
-  }
+	"name": "backend",
+	"version": "1.0.0",
+	"scripts": {
+		"start": "nodemon server.ts",
+		"test": "vitest run --passWithNoTests",
+		"build": "tsc"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.0",
+		"@types/socket.io": "^3.0.2",
+		"nodemon": "^3.1.9",
+		"prettier": "^3.4.2",
+		"ts-jest": "^29.2.5",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.7.3",
+		"vitest": "^3.0.1"
+	},
+	"dependencies": {
+		"cors": "^2.8.5",
+		"express": "^5.0.1",
+		"socket.io": "^4.8.1"
+	}
 }

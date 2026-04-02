@@ -3,18 +3,16 @@ import { Alert, Button, Container } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { login } from '../../api';
 import { setUser } from '../../auth';
-
 import './Login.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
+  const canSubmit = email.length > 0 && password.length > 0 && !loading;
 
   function handleEmailChange(e: any) {
     setEmail(e.target.value);
@@ -24,16 +22,17 @@ export function LoginPage() {
     setPassword(e.target.value);
   }
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: any) {
     e.preventDefault();
     setInfo(null);
     setLoading(true);
     try {
-      const user = await login(email.trim(), password);
+      const user = await login(email, password);
       setUser(user);
       navigate('/', { replace: true });
     } catch (err: any) {
-      setInfo(err?.message ?? 'Login failed');
+      const message = err && err.message;
+      setInfo(message || 'Error login failed');
     } finally {
       setLoading(false);
     }
@@ -53,7 +52,7 @@ export function LoginPage() {
             onChange={handleEmailChange}
             autoComplete="email"
             inputMode="email"
-            placeholder="you@example.com"
+            placeholder="user@test.com"
           />
         </label>
 
@@ -75,7 +74,6 @@ export function LoginPage() {
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
-
     </Container>
   );
 }

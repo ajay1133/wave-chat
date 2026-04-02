@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Alert, Button, Container } from '@mui/material';
-import { createConnection, searchUsers, type User } from '../../api';
+import { mkConn, searchUsers } from '../../api';
+import type { User } from '../../types';
 import { clearUser, getUser } from '../../auth';
 import './Home.css';
 
@@ -19,7 +20,6 @@ export default function Home() {
 
   function handleLogoutClick() {
     clearUser();
-    localStorage.removeItem('wave-chat-auth-since');
     navigate('/login', { replace: true });
   }
 
@@ -44,7 +44,7 @@ export default function Home() {
     if (!currentUser) {
       return;
     }
-    const q = query.trim();
+    const q = query;
     if (!q) {
       setMatches([]);
       return;
@@ -79,7 +79,7 @@ export default function Home() {
     }
     setInfo('');
     try {
-      const { connectionId } = await createConnection(currentUser.id, other.id);
+      const { connectionId } = await mkConn(currentUser.id, other.id);
       const url = `/chat/${connectionId}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e) {
@@ -112,10 +112,7 @@ export default function Home() {
               {currentUser ? <div className="homeSubtitle">{currentUser.name}</div> : null}
             </div>
 
-            <Button
-              variant="text"
-              onClick={handleLogoutClick}
-            >
+            <Button variant="text" onClick={handleLogoutClick}>
               Logout
             </Button>
           </div>
@@ -129,7 +126,7 @@ export default function Home() {
                     className="homeInput"
                     value={query}
                     onChange={handleQueryChange}
-                    placeholder="Type a name or email"
+                    placeholder="Type a user id, name or email"
                   />
                 </label>
 
@@ -150,14 +147,11 @@ export default function Home() {
                 ) : null}
               </div>
 
-              <Button
-                variant="contained"
-                onClick={handleStartNewChatClick}
-              >
+              <Button variant="contained" onClick={handleStartNewChatClick}>
                 Start new chat
               </Button>
 
-              {!matches.length && query.trim() ? <div className="homeHint">No suggestions.</div> : null}
+              {!matches.length && query ? <div className="homeHint">No suggestions.</div> : null}
             </div>
           </div>
 

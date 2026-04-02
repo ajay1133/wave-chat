@@ -3,87 +3,48 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Alert, Button, IconButton, Snackbar } from '@mui/material';
 import config from '../config';
-// Routes
 import Chat from './Chat';
 import Home from './Home';
 import { LoginPage } from './Login';
 import { getUser } from '../auth';
-import { incrementUnread } from '../unread';
+import type { IncomingRequest, StatusNotice, StatusPayload } from '../types';
 
-const socket = io(config.SOCKET_ENDPOINT, { transports: ['websocket', 'polling', 'flashsocket'] });
-const AUTH_SINCE_KEY = 'wave-chat-auth-since';
+const socket = io(config.SOCKET_ENDPOINT, {
+  autoConnect: false,
+  transports: ['websocket', 'polling', 'flashsocket']
+});
 
-function AuthSocketBridge() {
+function ConnectSocketHandler() {
   const location = useLocation();
 
   useEffect(() => {
-    const doAuth = () => {
-      const currentUser = getUser();
-      if (!currentUser) {
-        return;
+    const currentUser = getUser();
+    if (!currentUser) {
+      if (socket.connected) {
+        socket.disconnect();
       }
-      const since = localStorage.getItem(AUTH_SINCE_KEY) ?? undefined;
-      socket.emit('auth', { userId: currentUser.id, since });
-    };
-
-    doAuth();
-    socket.on('connect', doAuth);
-    return () => {
-      socket.off('connect', doAuth);
-    };
+      return;
+    }
+    (socket as any).auth = { userId: currentUser.id };
+    if (!socket.connected) {
+      socket.connect();
+    }
   }, [location.pathname]);
-
-  useEffect(() => {
-    const onDone = ({ serverTime }: { serverTime: string }) => {
-      if (!serverTime) {
-        return;
-      }
-      localStorage.setItem(AUTH_SINCE_KEY, serverTime);
-    };
-    socket.on('auth-done', onDone);
-    return () => {
-      socket.off('auth-done', onDone);
-    };
-  }, []);
 
   return null;
 }
 
-function UnreadSocketBridge() {
-  const location = useLocation();
-
-  useEffect(() => {
-    const onMessage = (msg: { id: string; connectionId: string; senderId: string | null; kind: string }) => {
-      const active = location.pathname === `/chat/${msg.connectionId}`;
-      if (active) {
-        return;
-      }
-      const currentUser = getUser();
-      if (currentUser && msg.senderId === currentUser.id) {
-        return;
-      }
-      if (msg.kind !== 'user') {
-        return;
-      }
-      incrementUnread(msg.connectionId, msg.id);
-    };
-    socket.on('chat-message', onMessage);
-    return () => {
-      socket.off('chat-message', onMessage);
-    };
-  }, [location.pathname]);
-  return null;
-}
-
-type IncomingRequest = { connectionId: string; fromUser: { id: string; name: string } };
-
-type StatusNotice = {
-  connectionId: string;
-  status: 'accepted' | 'rejected';
-  byUser?: { id: string; name: string };
-};
-
-function IncomingToast({ toast, offset, onDismiss, onRespond }: { toast: IncomingRequest; offset: number; onDismiss: (connectionId: string) => void; onRespond: (connectionId: string, accept: boolean) => void }) {
+function IncomingToast({
+  toast,
+  offset,
+  onDismiss,
+  onRespond
+}: {
+  toast: IncomingRequest;
+  offset: number;
+  onDismiss: (connectionId: string) => void;
+  onRespond: (connectionId: string, accept: boolean) => void;
+}) {
   function handleClose() {
     onDismiss(toast.connectionId);
   }
@@ -109,9 +70,7 @@ function IncomingToast({ toast, offset, onDismiss, onRespond }: { toast: Incomin
         action={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
             <IconButton aria-label="Close" size="small" onClick={handleClose}>
-              <span style={{ fontSize: 16, lineHeight: 1 }}>
-                ×
-              </span>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
             </IconButton>
             <div style={{ display: 'flex', gap: 8 }}>
               <Button size="small" color="inherit" onClick={handleAccept}>
@@ -130,7 +89,17 @@ function IncomingToast({ toast, offset, onDismiss, onRespond }: { toast: Incomin
   );
 }
 
-function StatusToast({ toast, offset, onDismiss, onOpen }: { toast: StatusNotice; offset: number; onDismiss: (connectionId: string, status: StatusNotice['status']) => void; onOpen: (connectionId: string) => void }) {
+function StatusToast({
+  toast,
+  offset,
+  onDismiss,
+  onOpen
+}: {
+  toast: StatusNotice;
+  offset: number;
+  onDismiss: (connectionId: string, status: StatusNotice['status']) => void;
+  onOpen: (connectionId: string) => void;
+}) {
   function handleClose() {
     onDismiss(toast.connectionId, toast.status);
   }
@@ -139,7 +108,7 @@ function StatusToast({ toast, offset, onDismiss, onOpen }: { toast: StatusNotice
     onOpen(toast.connectionId);
   }
 
-  const who = toast.byUser?.name ? ` from ${toast.byUser.name}` : '';
+  const who = toast.byUser && toast.byUser.name ? ` from ${toast.byUser.name}` : '';
   const text = toast.status === 'accepted' ? `Chat accepted${who}` : `Chat rejected${who}`;
 
   return (
@@ -155,9 +124,7 @@ function StatusToast({ toast, offset, onDismiss, onOpen }: { toast: StatusNotice
         action={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
             <IconButton aria-label="Close" size="small" onClick={handleClose}>
-              <span style={{ fontSize: 16, lineHeight: 1 }}>
-                ×
-              </span>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>×</span>
             </IconButton>
             {toast.status === 'accepted' ? (
               <div style={{ display: 'flex', gap: 8 }}>
@@ -179,6 +146,15 @@ function IncomingRequestToasts() {
   const [toasts, setToasts] = useState<IncomingRequest[]>([]);
   const [statusToasts, setStatusToasts] = useState<StatusNotice[]>([]);
 
+  function addStatusToast(status: StatusNotice['status'], payload: StatusPayload) {
+    setStatusToasts((prev) => {
+      if (prev.some((x) => x.connectionId === payload.connectionId && x.status === status)) {
+        return prev;
+      }
+      return prev.concat({ connectionId: payload.connectionId, status, byUser: payload.byUser });
+    });
+  }
+
   useEffect(() => {
     const onIncoming = (payload: IncomingRequest) => {
       setToasts((prev) => {
@@ -195,23 +171,8 @@ function IncomingRequestToasts() {
   }, []);
 
   useEffect(() => {
-    const onAccepted = (payload: { connectionId: string; byUser?: { id: string; name: string } }) => {
-      setStatusToasts((prev) => {
-        if (prev.some((x) => x.connectionId === payload.connectionId && x.status === 'accepted')) {
-          return prev;
-        }
-        return prev.concat({ connectionId: payload.connectionId, status: 'accepted', byUser: payload.byUser });
-      });
-    };
-
-    const onRejected = (payload: { connectionId: string; byUser?: { id: string; name: string } }) => {
-      setStatusToasts((prev) => {
-        if (prev.some((x) => x.connectionId === payload.connectionId && x.status === 'rejected')) {
-          return prev;
-        }
-        return prev.concat({ connectionId: payload.connectionId, status: 'rejected', byUser: payload.byUser });
-      });
-    };
+    const onAccepted = (payload: StatusPayload) => addStatusToast('accepted', payload);
+    const onRejected = (payload: StatusPayload) => addStatusToast('rejected', payload);
     socket.on('chat-accepted', onAccepted);
     socket.on('chat-rejected', onRejected);
     return () => {
@@ -249,11 +210,15 @@ function IncomingRequestToasts() {
     openChat(connectionId);
   }
 
+  const items = [
+    ...toasts.map((t) => ({ kind: 'incoming' as const, t })),
+    ...statusToasts.map((t) => ({ kind: 'status' as const, t }))
+  ];
+
   return (
     <>
-      {[...toasts.map((t) => ({ kind: 'incoming' as const, t })), ...statusToasts.map((t) => ({ kind: 'status' as const, t }))].map(
-        (item, idx, all) => {
-        const offset = (all.length - 1 - idx) * 76;
+      {items.map((item, idx) => {
+        const offset = (items.length - 1 - idx) * 76;
         if (item.kind === 'incoming') {
           return <IncomingToast toast={item.t} offset={offset} onDismiss={dismiss} onRespond={respond} />;
         }
@@ -267,8 +232,7 @@ function IncomingRequestToasts() {
 export default function Routes() {
   return (
     <BrowserRouter>
-      <AuthSocketBridge />
-      <UnreadSocketBridge />
+      <ConnectSocketHandler />
       <IncomingRequestToasts />
       <RouterRoutes>
         <Route path="/login" element={<LoginPage />} />

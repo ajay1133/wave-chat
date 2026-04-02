@@ -31,7 +31,7 @@
 .chatMessages {
   flex: 1;
   overflow: auto;
-  padding: 6px 0;
+  padding: 6px 10px 6px 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -41,15 +41,15 @@
   display: flex;
 }
 
-.chatMsgRow--me {
+.chatMsgRowSelf {
   justify-content: flex-end;
 }
 
-.chatMsgRow--them {
+.chatMsgRowOther {
   justify-content: flex-start;
 }
 
-.chatMsgRow--system {
+.chatMsgRowSystem {
   justify-content: center;
 }
 
@@ -73,11 +73,11 @@
   text-align: right;
 }
 
-.chatBubble--me {
+.chatBubbleSelf {
   background: rgba(0, 0, 0, 0.04);
 }
 
-.chatBubble--system {
+.chatBubbleSystem {
   opacity: 0.75;
 }
 

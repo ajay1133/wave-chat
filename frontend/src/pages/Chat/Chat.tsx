@@ -1,21 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import type { Socket } from 'socket.io-client';
 import { Alert, Button, Container } from '@mui/material';
-import { getConnectionMeta, getUserMessages, type ChatMessage, type ConnectionMeta } from '../../api';
+import { getConnectionMetadata, getChatMsgs } from '../../api';
 import { getUser } from '../../auth';
-import { clearUnread } from '../../unread';
 import './Chat.css';
 
-export default function Chat({ socket }: { socket: Socket }) {
+export default function Chat({ socket }: { socket: any }) {
   const navigate = useNavigate();
   const { connectionId } = useParams();
   const [currentUser] = useState(() => getUser());
-  const [meta, setUserMeta] = useState<ConnectionMeta | null>(null);
-  const [messages, setUserMessages] = useState<ChatMessage[]>([]);
+  const [connectionMetadata, setConnectionMetadata] = useState<any>(null);
+  const [messages, setUserMessages] = useState([]);
   const [messageText, setUserMessageText] = useState('');
   const [ended, setEnded] = useState(false);
-  const [info, setInfo] = useState<string>('');
+  const [info, setInfo] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
 
   function formatMessageTime(iso: string) {
@@ -23,7 +21,9 @@ export default function Chat({ socket }: { socket: Socket }) {
     if (Number.isNaN(d.getTime())) {
       return '';
     }
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString([], { 
+      hour: '2-digit', minute: '2-digit' 
+    });
   }
 
   useEffect(() => {
@@ -32,13 +32,6 @@ export default function Chat({ socket }: { socket: Socket }) {
       return;
     }
   }, [connectionId, currentUser, navigate, socket]);
-
-  useEffect(() => {
-    if (!currentUser || !connectionId) {
-      return;
-    }
-    clearUnread(connectionId);
-  }, [connectionId, currentUser]);
 
   useEffect(() => {
     setUserMessages([]);
@@ -51,18 +44,22 @@ export default function Chat({ socket }: { socket: Socket }) {
     if (!currentUser || !connectionId) {
       return;
     }
-    const loadMeta = async () => {
+    const loadConnectionMetadata = async () => {
       try {
-        const m = await getConnectionMeta(connectionId);
-        setUserMeta(m);
+        const m = await getConnectionMetadata(connectionId);
+        if (!m) {
+          throw new Error('Invalid connection metadata');
+        }
+        setConnectionMetadata(m);
         if (m.status === 'ended') {
           setEnded(true);
         }
-      } catch {
-        setUserMeta(null);
+      } catch (e) {
+        console.error(e);
+        setConnectionMetadata(null);
       }
     };
-    loadMeta();
+    loadConnectionMetadata();
   }, [connectionId, currentUser]);
 
   useEffect(() => {
@@ -71,21 +68,24 @@ export default function Chat({ socket }: { socket: Socket }) {
     }
     const loadMessages = async () => {
       try {
-        const { messages: history } = await getUserMessages(connectionId);
-        setUserMessages((prev) => {
+        const { messages: history } = await getChatMsgs(connectionId);
+        setUserMessages((prev: any) => {
           if (!prev.length) {
             return history;
           }
-          const byId = new Map<string, ChatMessage>();
-          for (const m of history) byId.set(m.id, m);
-          for (const m of prev) byId.set(m.id, m);
-          return Array.from(byId.values()).sort((a, b) => {
-            const d = a.createdAt.localeCompare(b.createdAt);
-            return d !== 0 ? d : a.id.localeCompare(b.id);
-          });
+          const byId = new Map();
+          for (const m of history) {
+            byId.set(m.id, m);
+          }
+          for (const m of prev) {
+            byId.set(m.id, m);
+          }  
+          return Array.from(byId.values()).sort((a: any, b: any) => (
+            a?.createdAt ?? '').localeCompare(b?.createdAt ?? '')
+          );
         });
       } catch {
-        setInfo('Failed to load messages');
+        setInfo('Error loading chat messages');
       }
     };
     loadMessages();
@@ -95,57 +95,53 @@ export default function Chat({ socket }: { socket: Socket }) {
     if (!currentUser || !connectionId) {
       return;
     }
-    const userId = currentUser.id;
-    const onMessage = (msg: ChatMessage) => {
-      if (msg.connectionId !== connectionId) {
+    const onMessage = (msg: any) => {
+      if (msg?.connectionId !== connectionId) {
         return;
       }
       setUserMessages((prev) => (
-        prev.some((m) => m.id === msg.id) ? prev : prev.concat(msg)
-      ));
+        prev.some((m: any) => m?.id === msg?.id) 
+          ? prev : prev.concat(msg))
+      );
     };
-
     const onEnded = ({ connectionId: cId }: { connectionId: string }) => {
       if (cId !== connectionId) {
         return;
       }
       setEnded(true);
-      setInfo('chat ended');
+      setInfo('Chat is ended');
     };
-
     const refreshMeta = async () => {
       try {
-        const m = await getConnectionMeta(connectionId);
-        setUserMeta(m);
+        const m = await getConnectionMetadata(connectionId);
+        if (!m) {
+          throw new Error('Invalid connection metadata');
+        }
+        setConnectionMetadata(m);
         if (m.status === 'ended') {
           setEnded(true);
         }
       } catch (e) {
         console.error(e);
-        setUserMeta(null);
+        setConnectionMetadata(null);
       }
     };
-
     const onAccepted = ({ connectionId: cId }: { connectionId: string }) => {
       if (cId !== connectionId) {
         return;
       }
       refreshMeta();
-      socket.emit('chat-join', { connectionId, userId });
     };
-
     const onRejected = ({ connectionId: cId }: { connectionId: string }) => {
       if (cId !== connectionId) {
         return;
       }
       refreshMeta();
     };
-
     socket.on('chat-message', onMessage);
     socket.on('chat-ended', onEnded);
     socket.on('chat-accepted', onAccepted);
     socket.on('chat-rejected', onRejected);
-    socket.emit('chat-join', { connectionId, userId });
     return () => {
       socket.off('chat-message', onMessage);
       socket.off('chat-ended', onEnded);
@@ -155,7 +151,7 @@ export default function Chat({ socket }: { socket: Socket }) {
   }, [connectionId, currentUser, socket]);
 
   useEffect(() => {
-    const el = listRef.current;
+    const el = listRef?.current;
     if (!el) {
       return;
     }
@@ -163,38 +159,36 @@ export default function Chat({ socket }: { socket: Socket }) {
   }, [messages.length]);
 
   function endChat() {
-    if (!currentUser || !connectionId) {
+    if (!currentUser || !connectionId || ended) {
       return;
     }
-    if (ended) {
-      return;
-    }
-    socket.emit('chat-end', { connectionId, userId: currentUser.id });
+    socket.emit(
+      'chat-end', 
+      { connectionId, userId: currentUser.id }
+    );
   }
 
   function sendMessage() {
-    if (!currentUser || !connectionId) {
+    if (!currentUser || !connectionId || !canSend || !messageText) {
       return;
     }
-    if (!canSend) {
-      return;
-    }
-    const clean = messageText.trim();
-    if (!clean) {
-      return;
-    }
-    socket.emit('chat-message', { connectionId, senderId: currentUser.id, content: clean });
+    socket.emit(
+      'chat-message', 
+      { connectionId, senderId: currentUser.id, content: messageText });
     setUserMessageText('');
   }
 
-  const otherUser = !meta || !currentUser ? null : meta.initiatorId === currentUser.id ? meta.recipient : meta.initiator;
-  const canSend = !ended && meta?.status === 'accepted';
+  const otherUser = !connectionMetadata || !currentUser 
+    ? null 
+    : connectionMetadata.initiatorId === currentUser.id 
+      ? connectionMetadata.recipient : connectionMetadata.initiator;
+  const canSend = !ended && !!connectionMetadata && connectionMetadata.status === 'accepted';
   return (
     <Container maxWidth="sm" className="chatPage">
       <div className="chatLayout">
         <div className="chatHeader">
           <h2 className="chatTitle">{otherUser ? `Chat with ${otherUser.name}` : 'Chat'}</h2>
-          <Button variant="outlined" onClick={endChat} disabled={!meta || ended}>
+          <Button variant="outlined" onClick={endChat} disabled={!connectionMetadata || ended}>
             End Chat
           </Button>
           <Button variant="text" onClick={() => navigate('/')}>
@@ -202,17 +196,18 @@ export default function Chat({ socket }: { socket: Socket }) {
           </Button>
         </div>
 
-        {meta && meta.status !== 'accepted' ? <Alert severity="info">Chat is {meta.status}.</Alert> : null}
+        {connectionMetadata && connectionMetadata.status !== 'accepted' ? <Alert severity="info">Chat is {connectionMetadata.status}.</Alert> : null}
         {info ? <Alert severity={ended ? 'warning' : 'info'}>{info}</Alert> : null}
-        
+
         <div className="chatDivider" />
         <div ref={listRef} className="chatMessages">
-          {messages.map((m) => {
-            const who = m.kind === 'system' ? 'system' : m.senderId === currentUser?.id ? 'me' : 'them';
+          {messages.map((m: any) => {
+            const who = m.kind === 'system' ? 'system' : currentUser && m.senderId === currentUser.id ? 'self' : 'other';
             const time = formatMessageTime(m.createdAt);
+            const whoCap = who.charAt(0).toUpperCase() + who.slice(1);
             return (
-              <div key={m.id} data-msg-id={m.id} className={`chatMsgRow chatMsgRow--${who}`}>
-                <div className={`chatBubble chatBubble--${who}`}>
+              <div key={m.id} data-msg-id={m.id} className={`chatMsgRow chatMsgRow${whoCap}`}>
+                <div className={`chatBubble chatBubble${whoCap}`}>
                   <div>{m.content}</div>
                   {time ? <div className="chatMsgTime">{time}</div> : null}
                 </div>
@@ -220,7 +215,7 @@ export default function Chat({ socket }: { socket: Socket }) {
             );
           })}
         </div>
-        
+
         <div className="chatInputRow">
           <input
             className="chatInput"
