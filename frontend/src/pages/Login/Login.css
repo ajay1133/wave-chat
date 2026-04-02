@@ -1,0 +1,38 @@
+.loginPage {
+  padding: 32px 16px;
+}
+
+.loginTitle {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.loginSubtitle {
+  margin: 0 0 18px;
+  opacity: 0.75;
+}
+
+.loginForm {
+  display: grid;
+  gap: 14px;
+}
+
+.loginLabel {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.loginInput {
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.loginHint {
+  margin-top: 18px;
+  font-size: 13px;
+  opacity: 0.75;
+}

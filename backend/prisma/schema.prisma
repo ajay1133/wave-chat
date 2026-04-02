@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConnectionStatus {
+  pending
+  accepted
+  rejected
+  ended
+}
+
+enum MessageKind {
+  user
+  system
+}
+
+model User {
+  id        String           @id @default(uuid())
+  email     String           @unique
+  name      String
+  password  String
+  createdAt DateTime         @default(now())
+
+  initiatedConnections ChatConnection[] @relation("Initiator")
+  receivedConnections  ChatConnection[] @relation("Recipient")
+  messages             ChatMessage[]
+
+  @@map("user")
+}
+
+model ChatConnection {
+  id          String           @id @default(uuid())
+  initiatorId String
+  recipientId String
+  status      ConnectionStatus @default(pending)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  initiator   User             @relation("Initiator", fields: [initiatorId], references: [id])
+  recipient   User             @relation("Recipient", fields: [recipientId], references: [id])
+  messages    ChatMessage[]
+
+  @@index([initiatorId])
+  @@index([recipientId])
+  @@index([status])
+
+  @@map("chat_connection")
+}
+
+model ChatMessage {
+  id           String         @id @default(uuid())
+  connectionId String
+  senderId     String?
+  kind         MessageKind    @default(user)
+  content      String         @db.Text
+  createdAt    DateTime       @default(now())
+
+  connection   ChatConnection @relation(fields: [connectionId], references: [id])
+  sender       User?          @relation(fields: [senderId], references: [id])
+
+  @@index([connectionId, createdAt])
+
+  @@map("chat_message")
+}

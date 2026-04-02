@@ -1,0 +1,82 @@
+.homePage {
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+
+.homeCard {
+  max-width: 500px;
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.homeHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.homeTitle {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.homeSubtitle {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.homeSearchBlock {
+  display: grid;
+  gap: 12px;
+}
+
+.homeSearchField {
+  position: relative;
+}
+
+.homeLabel {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.homeInput {
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.homeSuggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.homeSuggestion {
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.homeSuggestion:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.homeHint {
+  font-size: 13px;
+  opacity: 0.75;
+}
