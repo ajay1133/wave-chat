@@ -1,6 +1,26 @@
 # CloudWave Full Stack Code Challenge ~ Wave Chat
 CloudWave have provided scaffolding for both the front and back end of the challenge, to save you time.
 
+### Start instructions
+git clone https://github.com/ajay1133/wave-chat.git
+
+## Start Backend Nodejs Server (Post 3001)
+Served locally at http://localhost:3001. Open terminal & enter below commands. Port can be edited in `/backend/config.ts`.
+
+cd backend  
+npm install  
+npm start
+
+## Start Frontend React/Vite Server (Post 5173)
+Served locally at http://localhost:5173. Open terminal & enter below commands.
+
+cd frontend  
+npm install  
+npm start
+
+User by default lands on login screen. There are 5 test users 
+mentioned in `/server/default-users.json` that can be used to login.
+
 ## Front-end
 
 ### Configuration
