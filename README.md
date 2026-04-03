@@ -4,14 +4,14 @@ CloudWave have provided scaffolding for both the front and back end of the chall
 ### Start instructions
 git clone https://github.com/ajay1133/wave-chat.git
 
-## Start Backend Nodejs Server (Post 3001)
+## Start Backend Nodejs Server (Port 3001)
 Served locally at http://localhost:3001. Open terminal & enter below commands. Port can be edited in `/backend/config.ts`.
 
 cd backend  
 npm install  
 npm start
 
-## Start Frontend React/Vite Server (Post 5173)
+## Start Frontend React/Vite Server (Port 5173)
 Served locally at http://localhost:5173. Open terminal & enter below commands.
 
 cd frontend  
