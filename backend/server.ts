@@ -1,21 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import http from 'http';
-import { Server as IOServer } from 'socket.io';
+import { mkApp } from './app';
 
-import CONFIG from './config';
+const CONFIG_MOD = require('./config');
+const CONFIG = CONFIG_MOD.default ?? CONFIG_MOD;
 
-const app = express();
-const router = express.Router();
-
-const httpServer = http.createServer(http);
-const io = new IOServer(httpServer);
-
-app.use(router);
-app.use(cors({ origin: '*' }));
-
-io.on('connection', (socket) => {});
+const { httpServer } = mkApp();
 
 httpServer.listen(CONFIG.PORT, () => {
-  console.log(`Server listening on *:${CONFIG.PORT} 🚀`);
+	console.log(`Server listening on *:${CONFIG.PORT} 🚀`);
 });

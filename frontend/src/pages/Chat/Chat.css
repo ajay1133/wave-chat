@@ -1,0 +1,96 @@
+.chatPage {
+  padding: 16px;
+  height: 100dvh;
+}
+
+.chatLayout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chatHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chatTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.chatDivider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.chatMessages {
+  flex: 1;
+  overflow: auto;
+  padding: 6px 10px 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chatMsgRow {
+  display: flex;
+}
+
+.chatMsgRowSelf {
+  justify-content: flex-end;
+}
+
+.chatMsgRowOther {
+  justify-content: flex-start;
+}
+
+.chatMsgRowSystem {
+  justify-content: center;
+}
+
+.chatBubble {
+  max-width: 85%;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.chatMsgTime {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.65;
+  align-self: flex-end;
+  text-align: right;
+}
+
+.chatBubbleSelf {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.chatBubbleSystem {
+  opacity: 0.75;
+}
+
+.chatInputRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chatInput {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  font-size: 14px;
+}

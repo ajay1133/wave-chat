@@ -9,5 +9,8 @@ export default defineConfig({
     checker({
       typescript: true
     })
-  ]
+  ],
+  test: {
+    environment: 'jsdom'
+  }
 });

@@ -1,3 +1,5 @@
-export default {
-  PORT: 3001
+const CONFIG = {
+	PORT: 3001
 };
+
+export default CONFIG;
