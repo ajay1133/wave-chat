@@ -134,10 +134,9 @@ export function socketService(io, store) {
 			}
 
 			socket.on('chat-respond', async (payload) => {
-				const connectionId = payload.connectionId;
+				const cId = payload.connectionId;
 				const accept = Boolean(payload.accept);
 				const id = getSocketUserId(socket);
-				const cId = connectionId;
 				if (!id || !cId) {
 					return;
 				}
@@ -146,13 +145,11 @@ export function socketService(io, store) {
 					return;
 				}
 				const connection = store.chats.getConnectionById(cId);
-				if (!connection) {
-					return;
-				}
-				if (connection.recipientId !== id) {
-					return;
-				}
-				if (connection.status !== 'pending') {
+				if (
+					!connection || 
+					connection.recipientId !== id || 
+					connection.status !== 'pending'
+				) {
 					return;
 				}
 				const initiator = store.users.getById(connection.initiatorId);
@@ -190,10 +187,10 @@ export function socketService(io, store) {
 				emitToUser(initiator.id, 'chat-message', msg);
 				emitToUser(recipient.id, 'chat-message', msg);
 			});
+
 			socket.on('chat-end', async (payload) => {
-				const connectionId = payload.connectionId;
+				const cId = payload.connectionId;
 				const id = getSocketUserId(socket);
-				const cId = connectionId;
 				if (!id || !cId) {
 					return;
 				}
@@ -218,6 +215,7 @@ export function socketService(io, store) {
 					systemMessage: `${actorName} ended the chat`
 				});
 			});
+
 			socket.on('chat-message', async (payload) => {
 				const connectionId = payload.connectionId;
 				const content = payload.content;
@@ -253,6 +251,7 @@ export function socketService(io, store) {
 				emitToUser(connection.initiatorId, 'chat-message', msg);
 				emitToUser(connection.recipientId, 'chat-message', msg);
 			});
+
 			socket.on('disconnect', async () => {
 				const userId = getSocketUserId(socket);
 				if (!userId) {
@@ -261,11 +260,12 @@ export function socketService(io, store) {
 				removeSocket(userId, socket.id);
 			});
 		});
+
 		setInterval(() => {
 			try {
 				endInactiveChats();
 			} catch (e) {
-				console.error('ending inactive chats failed, error = ', e);
+				console.error('Ending inactive chats failed, error = ', e);
 			}
 		}, 60 * 1000);
 	}
