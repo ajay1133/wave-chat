@@ -11,6 +11,8 @@ cd backend
 npm install  
 npm start
 
+The standard would have been to use a database but focus was to develop chat application so used default hardcoded list of users `default-users.json` & RAM to persist data related to user actions which wipes out on server refresh. 
+
 ## Start Frontend React/Vite Server (Port 5173)
 Served locally at http://localhost:5173. Open terminal & enter below commands.
 
@@ -26,21 +28,15 @@ mentioned in `/server/default-users.json` that can be used to login.
 ### Configuration
 This application uses Vite, ReactJS, Typescript and vitest for testing. `tsconfig.json` has been pre-configured for the environment and hot reloading has been set up for you.
 
-⚠️ **Some files may throw typescript errors due to empty placeholder files or commented out code.**
-
 &nbsp;
-### Linting
+### Linting & Prettier
 There's `stylelint` for linting SCSS files and `eslint` for linting code. You can lint the application with the `lint` and `lint:styles` commands in `package.json`.
 
-⚠️ **Some files may throw linting warnings due to commented out scaffolding code.**
+Prettier is setup with configuration in `server/.prettierrc`
 
 &nbsp;
 ### UI & Components
-We've added `ant design` for you to use, which comes with a selection of UI React components and style classes out of the box.
-
-Read more [here](https://ant.design/).
-
-Not comfortable with Ant design? Feel free to use native HTML elements or another component library, such as `material-ui` or `react-bootstrap`.
+Used simple CSS because of time restrictions
 
 &nbsp;
 ### Routing

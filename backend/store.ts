@@ -7,7 +7,7 @@ const toPublicUser = (user) => {
 	return { id, email, name };
 };
 
-const getUsrJson = () => {
+const getDefaultUsers = () => {
 	try {
 		const usersJsonList = require('./default-users.json') ?? [];
 		return usersJsonList;
@@ -16,10 +16,10 @@ const getUsrJson = () => {
 	}
 };
 
-const usersList = (defaultUsersRaw) => {
+const getUsersList = () => {
 	const usersById = new Map();
 	const usersByEmail = new Map();
-	for (const u of defaultUsersRaw ?? []) {
+	for (const u of (getDefaultUsers() ?? [])) {
 		const { id, email, name, password } = u ?? {};
 		if (!id || !email || !name || !password) {
 			continue;
@@ -31,7 +31,7 @@ const usersList = (defaultUsersRaw) => {
 	return { usersById, usersByEmail };
 };
 
-const crUsrGetId = (usersById) => (id) => usersById.get(id) ?? null;
+const getUsers = (usersById) => (id) => usersById.get(id) ?? null;
 
 const crUsrGetEmail = (usersByEmail) => (email) => usersByEmail.get(email) ?? null;
 
@@ -60,7 +60,7 @@ const crUsrSearch = (usersById) => ({ query, excludeUserId, take }) => {
 };
 
 const mkUsr = (usersById, usersByEmail) => ({
-	getById: crUsrGetId(usersById),
+	getById: getUsers(usersById),
 	getByEmail: crUsrGetEmail(usersByEmail),
 	search: crUsrSearch(usersById)
 });
@@ -71,7 +71,7 @@ const addMsgToConnIdx = (messageIdsByConnectionId) => (msg) => {
 	messageIdsByConnectionId.set(msg.connectionId, list);
 };
 
-const crChatConn = (connectionsById) => ({ initiatorId, recipientId }) => {
+const mkChatConn = (connectionsById) => ({ initiatorId, recipientId }) => {
 	const now = new Date();
 	const data = {
 		id: newId(),
@@ -85,11 +85,11 @@ const crChatConn = (connectionsById) => ({ initiatorId, recipientId }) => {
 	return data;
 };
 
-const crChatGetConn = (connectionsById) => (id) => {
+const getChatConn = (connectionsById) => (id) => {
 	return connectionsById.get(id) ?? null;
 };
 
-const crChatPendRecp = (connectionsById) => (recipientId) => {
+const getPendingRepList = (connectionsById) => (recipientId) => {
 	const res = [];
 	for (const c of connectionsById.values()) {
 		if (c.recipientId === recipientId && c.status === 'pending') {
@@ -100,12 +100,16 @@ const crChatPendRecp = (connectionsById) => (recipientId) => {
 	return res;
 };
 
-const crChatChgInit = (connectionsById) => ({ initiatorId, since, statuses, take }) => {
+const getChangedInitList = (connectionsById) => ({ initiatorId, since, statuses, take }) => {
 	const limit = Number.isFinite(take) ? Math.min(200, take) : 50;
-	const allowed = new Set(Array.isArray(statuses) ? statuses : []);
+	const excStatuses = new Set(Array.isArray(statuses) ? statuses : []);
 	const res = [];
 	for (const c of connectionsById.values()) {
-		if (c.initiatorId !== initiatorId || allowed.has(c.status) || c?.updatedAt?.getTime() <= since?.getTime()) {
+		if (
+			c.initiatorId !== initiatorId || 
+			excStatuses.has(c.status) || 
+			c.updatedAt?.getTime() <= since?.getTime()
+		) {
 			continue;
 		}
 		res.push(c);
@@ -114,7 +118,7 @@ const crChatChgInit = (connectionsById) => ({ initiatorId, since, statuses, take
 	return res.slice(0, limit);
 };
 
-const crChatSetStat = (connectionsById) => ({ connectionId, status }) => {
+const updConnStatus = (connectionsById) => ({ connectionId, status }) => {
 	const c = connectionsById.get(connectionId);
 	if (!c) {
 		return null;
@@ -126,7 +130,7 @@ const crChatSetStat = (connectionsById) => ({ connectionId, status }) => {
 	return c;
 };
 
-const crChatNewMsg = (messagesById, addMsgToConnIdx) => ({ connectionId, senderId, kind, content }) => {
+const mkChatMsg = (messagesById, addMsgToConnIdx) => ({ connectionId, senderId, kind, content }) => {
 	const msg = {
 		id: newId(),
 		connectionId,
@@ -140,7 +144,7 @@ const crChatNewMsg = (messagesById, addMsgToConnIdx) => ({ connectionId, senderI
 	return msg;
 };
 
-const crChatGetMsgs = (messagesById, messageIdsByConnectionId) => ({ connectionId, before, limit }) => {
+const getChatMsgs = (messagesById, messageIdsByConnectionId) => ({ connectionId, before, limit }) => {
 	const ids = messageIdsByConnectionId.get(connectionId) ?? [];
 	const res = [];
 	for (const id of ids) {
@@ -162,7 +166,7 @@ const crChatGetMsgs = (messagesById, messageIdsByConnectionId) => ({ connectionI
 	return sliced.reverse();
 };
 
-const crChatAcptConns = (connectionsById) => () => {
+const getAcptConns = (connectionsById) => () => {
 	const res = [];
 	for (const c of connectionsById.values()) {
 		if (c.status === 'accepted') {
@@ -172,7 +176,7 @@ const crChatAcptConns = (connectionsById) => () => {
 	return res;
 };
 
-const crChatLastAct = (connectionsById, messagesById, messageIdsByConnectionId) => (connectionId) => {
+const getChatLastAct = (connectionsById, messagesById, messageIdsByConnectionId) => (connectionId) => {
 	const c = connectionsById.get(connectionId);
 	if (!c) {
 		return null;
@@ -194,20 +198,20 @@ const crChatLastAct = (connectionsById, messagesById, messageIdsByConnectionId) 
 const mkChat = (connectionsById, messagesById, messageIdsByConnectionId) => {
 	const addMsgToConnIndex = addMsgToConnIdx(messageIdsByConnectionId);
 	return {
-		createConnection: crChatConn(connectionsById),
-		getConnectionById: crChatGetConn(connectionsById),
-		listPendingForRecipient: crChatPendRecp(connectionsById),
-		listChangedForInitiator: crChatChgInit(connectionsById),
-		updateConnectionStatus: crChatSetStat(connectionsById),
-		createMessage: crChatNewMsg(messagesById, addMsgToConnIndex),
-		getMessages: crChatGetMsgs(messagesById, messageIdsByConnectionId),
-		listAcceptedConnections: crChatAcptConns(connectionsById),
-		getLastActivityAt: crChatLastAct(connectionsById, messagesById, messageIdsByConnectionId)
+		createConnection: mkChatConn(connectionsById),
+		getConnectionById: getChatConn(connectionsById),
+		listPendingForRecipient: getPendingRepList(connectionsById),
+		listChangedForInitiator: getChangedInitList(connectionsById),
+		updateConnectionStatus: updConnStatus(connectionsById),
+		createMessage: mkChatMsg(messagesById, addMsgToConnIndex),
+		getMessages: getChatMsgs(messagesById, messageIdsByConnectionId),
+		listAcceptedConnections: getAcptConns(connectionsById),
+		getLastActivityAt: getChatLastAct(connectionsById, messagesById, messageIdsByConnectionId)
 	};
 };
 
 export const mkStore = () => {
-	const { usersById, usersByEmail } = usersList(getUsrJson());
+	const { usersById, usersByEmail } = getUsersList();
 	const connectionsById = new Map();
 	const messagesById = new Map();
 	const messageIdsByConnectionId = new Map();

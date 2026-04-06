@@ -34,7 +34,6 @@ export function socketService(io, store) {
 	}
 
 	function deliverOnConnect(socket, id) {
-		// If the user was offline when chat requests were created, deliver them now.
 		const pending = store.chats.listPendingForRecipient(id);
 		for (const c of pending) {
 			const initiator = store.users.getById(c.initiatorId);
@@ -46,10 +45,8 @@ export function socketService(io, store) {
 				fromUser: { id: initiator.id, name: initiator.name }
 			});
 		}
-
-		const fallbackWindowMs = 7 * 24 * 60 * 60 * 1000;
+		const fallbackWindowMs = 7 * 24 * 60 * 60 * 1000; // 1 week
 		const cutoff = new Date(Date.now() - fallbackWindowMs);
-
 		const changed = store.chats.listChangedForInitiator({
 			initiatorId: id,
 			since: cutoff,
