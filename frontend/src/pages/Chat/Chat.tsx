@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Alert, Button, Container } from '@mui/material';
-import { getConnectionMetadata, getChatMsgs } from '../../api';
+import { getConnectionMetadata, getMessagesByConnectionId } from '../../api';
 import { getUser } from '../../auth';
+import type { ChatMessage, ConnectionMeta, StatusPayload } from '../../types';
 import './Chat.css';
 
 export default function Chat({ socket }: { socket: any }) {
   const navigate = useNavigate();
   const { connectionId } = useParams();
   const [currentUser] = useState(() => getUser());
-  const [connectionMetadata, setConnectionMetadata] = useState<any>(null);
-  const [messages, setUserMessages] = useState([]);
+  const [connectionMetadata, setConnectionMetadata] = useState<ConnectionMeta | null>(null);
+  const [messages, setUserMessages] = useState<ChatMessage[]>([]);
   const [messageText, setUserMessageText] = useState('');
   const [ended, setEnded] = useState(false);
   const [info, setInfo] = useState('');
@@ -21,8 +22,9 @@ export default function Chat({ socket }: { socket: any }) {
     if (Number.isNaN(d.getTime())) {
       return '';
     }
-    return d.toLocaleTimeString([], { 
-      hour: '2-digit', minute: '2-digit' 
+    return d.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
 
@@ -68,21 +70,19 @@ export default function Chat({ socket }: { socket: any }) {
     }
     const loadMessages = async () => {
       try {
-        const { messages: history } = await getChatMsgs(connectionId);
-        setUserMessages((prev: any) => {
+        const { messages: history } = await getMessagesByConnectionId(connectionId);
+        setUserMessages((prev) => {
           if (!prev.length) {
             return history;
           }
-          const byId = new Map();
+          const byId = new Map<string, ChatMessage>();
           for (const m of history) {
             byId.set(m.id, m);
           }
           for (const m of prev) {
             byId.set(m.id, m);
-          }  
-          return Array.from(byId.values()).sort((a: any, b: any) => (
-            a?.createdAt ?? '').localeCompare(b?.createdAt ?? '')
-          );
+          }
+          return Array.from(byId.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
         });
       } catch {
         setInfo('Error loading chat messages');
@@ -99,12 +99,9 @@ export default function Chat({ socket }: { socket: any }) {
       if (msg?.connectionId !== connectionId) {
         return;
       }
-      setUserMessages((prev) => (
-        prev.some((m: any) => m?.id === msg?.id) 
-          ? prev : prev.concat(msg))
-      );
+      setUserMessages((prev) => (prev.some((m) => m.id === msg?.id) ? prev : prev.concat(msg as ChatMessage)));
     };
-    const onEnded = ({ connectionId: cId }: { connectionId: string }) => {
+    const onEnded = ({ connectionId: cId }: StatusPayload) => {
       if (cId !== connectionId) {
         return;
       }
@@ -126,13 +123,13 @@ export default function Chat({ socket }: { socket: any }) {
         setConnectionMetadata(null);
       }
     };
-    const onAccepted = ({ connectionId: cId }: { connectionId: string }) => {
+    const onAccepted = ({ connectionId: cId }: StatusPayload) => {
       if (cId !== connectionId) {
         return;
       }
       refreshMeta();
     };
-    const onRejected = ({ connectionId: cId }: { connectionId: string }) => {
+    const onRejected = ({ connectionId: cId }: StatusPayload) => {
       if (cId !== connectionId) {
         return;
       }
@@ -162,26 +159,23 @@ export default function Chat({ socket }: { socket: any }) {
     if (!currentUser || !connectionId || ended) {
       return;
     }
-    socket.emit(
-      'chat-end', 
-      { connectionId, userId: currentUser.id }
-    );
+    socket.emit('chat-end', { connectionId, userId: currentUser.id });
   }
 
   function sendMessage() {
     if (!currentUser || !connectionId || !canSend || !messageText) {
       return;
     }
-    socket.emit(
-      'chat-message', 
-      { connectionId, senderId: currentUser.id, content: messageText });
+    socket.emit('chat-message', { connectionId, senderId: currentUser.id, content: messageText });
     setUserMessageText('');
   }
 
-  const otherUser = !connectionMetadata || !currentUser 
-    ? null 
-    : connectionMetadata.initiatorId === currentUser.id 
-      ? connectionMetadata.recipient : connectionMetadata.initiator;
+  const otherUser =
+    !connectionMetadata || !currentUser
+      ? null
+      : connectionMetadata.initiatorId === currentUser.id
+        ? connectionMetadata.recipient
+        : connectionMetadata.initiator;
   const canSend = !ended && !!connectionMetadata && connectionMetadata.status === 'accepted';
   return (
     <Container maxWidth="sm" className="chatPage">
@@ -196,13 +190,16 @@ export default function Chat({ socket }: { socket: any }) {
           </Button>
         </div>
 
-        {connectionMetadata && connectionMetadata.status !== 'accepted' ? <Alert severity="info">Chat is {connectionMetadata.status}.</Alert> : null}
+        {connectionMetadata && connectionMetadata.status !== 'accepted' ? (
+          <Alert severity="info">Chat is {connectionMetadata.status}.</Alert>
+        ) : null}
         {info ? <Alert severity={ended ? 'warning' : 'info'}>{info}</Alert> : null}
 
         <div className="chatDivider" />
         <div ref={listRef} className="chatMessages">
           {messages.map((m: any) => {
-            const who = m.kind === 'system' ? 'system' : currentUser && m.senderId === currentUser.id ? 'self' : 'other';
+            const who =
+              m.kind === 'system' ? 'system' : currentUser && m.senderId === currentUser.id ? 'self' : 'other';
             const time = formatMessageTime(m.createdAt);
             const whoCap = who.charAt(0).toUpperCase() + who.slice(1);
             return (
