@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { createLoginHandler } from '../routes/auth';
+import { loginUser } from '../routes/auth';
 import { createStore } from '../store';
 import { createMockReq, createMockRes } from './mockHttp';
 
 describe('auth routes', () => {
 	it('POST /auth/login succeeds with default user', async () => {
 		const store = createStore();
-		const handler = createLoginHandler({ store });
+		const handler = loginUser({ store });
 		const req = createMockReq({
-			body: { email: 'testUser1@test.com', password: 'testUser1' }
+			body: { 
+                email: 'testUser1@test.com', 
+                password: 'testUser1' 
+            }
 		});
 		const res = createMockRes();
 		await handler(req, res);

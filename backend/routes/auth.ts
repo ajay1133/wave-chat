@@ -1,9 +1,13 @@
 import express from 'express';
+import type { Request, Response } from 'express';
+import type { ErrorResponse, LoginRequestBody, LoginResponse } from '../types';
 
-export function createLoginHandler({ store }: { store: any }) {
-	return async (req: any, res: any) => {
-		const email = req.body.email;
-		const password = req.body.password;
+export function loginUser({ store }: { store: any }) {
+	return async (
+		req: Request<{}, LoginResponse | ErrorResponse, LoginRequestBody>,
+		res: Response<LoginResponse | ErrorResponse>
+	) => {
+		const { email, password } = req.body;
 		if (!email || !password) {
 			res.status(400).json({ error: 'Error email or password is missing' });
 			return;
@@ -27,6 +31,6 @@ export function createLoginHandler({ store }: { store: any }) {
 
 export function authRoutes({ store }: { store: any }) {
 	const router = express.Router();
-	router.post('/auth/login', createLoginHandler({ store }));
+	router.post('/auth/login', loginUser({ store }));
 	return router;
 }

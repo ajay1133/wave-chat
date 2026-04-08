@@ -32,3 +32,60 @@ export type ChatMessage = {
 	content: string;
 	createdAt: Date;
 };
+
+export type ErrorResponse = {
+	error: string;
+};
+
+export type LoginRequestBody = {
+	email?: string;
+	password?: string;
+};
+
+export type LoginResponse = {
+	id: string;
+	email: string;
+	name: string;
+};
+
+export type SearchUsersQuery = {
+	query?: string;
+	excludeUserId?: string;
+	take?: string;
+};
+
+export type SearchUsersResponse = {
+	users: PublicUser[];
+};
+
+export type PostConnectionsRequestBody = {
+	initiatorId?: string;
+	recipientId?: string;
+};
+
+export type PostConnectionsResponse = {
+	connectionId: string;
+	status: ConnectionStatus;
+};
+
+export type ConnectionParams = {
+	connectionId: string;
+};
+
+export type GetConnectionResponse = {
+	id: string;
+	status: ConnectionStatus;
+	initiator: PublicUser;
+	recipient: PublicUser;
+	initiatorId: string;
+	recipientId: string;
+};
+
+export type GetMessagesQuery = {
+	limit?: string;
+	before?: string;
+};
+
+export type GetMessagesResponse = {
+	messages: ChatMessage[];
+};

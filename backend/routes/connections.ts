@@ -1,6 +1,16 @@
 import express from 'express';
+import type { Request, Response } from 'express';
+import type {
+	ConnectionParams,
+	ErrorResponse,
+	GetConnectionResponse,
+	GetMessagesQuery,
+	GetMessagesResponse,
+	PostConnectionsRequestBody,
+	PostConnectionsResponse
+} from '../types';
 
-export function getAuthedUserId(store: any, req: any, res: any) {
+export function getAuthedUserId(store: any, req: Request, res: Response<ErrorResponse>) {
 	const id = req.header('x-user-id');
 	if (!id) {
 		res.status(401).json({ error: 'Error x-user-id is missing' });
@@ -14,14 +24,16 @@ export function getAuthedUserId(store: any, req: any, res: any) {
 	return id;
 }
 
-export function createPostConnectionsHandler({ store, realtime }: { store: any, realtime: any }) {
-	return async (req, res) => {
-		const authedUserId = getAuthedUserId(store, req, res);
+export function postConnections({ store, realtime }: { store: any, realtime: any }) {
+	return async (
+		req: Request<{}, PostConnectionsResponse | ErrorResponse, PostConnectionsRequestBody>,
+		res: Response<PostConnectionsResponse | ErrorResponse>
+	) => {
+		const authedUserId = getAuthedUserId(store, req, res as Response<ErrorResponse>);
 		if (!authedUserId) {
 			return;
 		}
-		const initiatorId = req.body.initiatorId;
-		const recipientId = req.body.recipientId;
+		const { initiatorId, recipientId } = req.body;
 		if (!initiatorId || !recipientId) {
 			res.status(400).json({ error: 'Error initiatorId or recipientId is missing' });
 			return;
@@ -68,13 +80,16 @@ export function createPostConnectionsHandler({ store, realtime }: { store: any, 
 	};
 }
 
-export function createGetConnectionByIdHandler({ store }: { store: any }) {
-	return async (req: any, res: any) => {
-		const authedUserId = getAuthedUserId(store, req, res);
+export function getConnectionById({ store }: { store: any }) {
+	return async (
+		req: Request<ConnectionParams, GetConnectionResponse | ErrorResponse>,
+		res: Response<GetConnectionResponse | ErrorResponse>
+	) => {
+		const authedUserId = getAuthedUserId(store, req, res as Response<ErrorResponse>);
 		if (!authedUserId) {
 			return;
 		}
-		const connectionId = req.params.connectionId;
+		const { connectionId } = req.params;
 		const connection = store.chats.getConnectionById(connectionId);
 		if (!connection) {
 			res.status(404).json({ error: 'Error connection not found' });
@@ -101,13 +116,16 @@ export function createGetConnectionByIdHandler({ store }: { store: any }) {
 	};
 }
 
-export function createGetMessagesByConnectionIdHandler({ store }: { store: any }) {
-	return async (req: any, res: any) => {
-		const authedUserId = getAuthedUserId(store, req, res);
+export function getMessagesByConnectionId({ store }: { store: any }) {
+	return async (
+		req: Request<ConnectionParams, GetMessagesResponse | ErrorResponse, {}, GetMessagesQuery>,
+		res: Response<GetMessagesResponse | ErrorResponse>
+	) => {
+		const authedUserId = getAuthedUserId(store, req, res as Response<ErrorResponse>);
 		if (!authedUserId) {
 			return;
 		}
-		const connectionId = req.params.connectionId;
+		const { connectionId } = req.params;
 		const conn = store.chats.getConnectionById(connectionId);
 		if (!conn) {
 			res.status(404).json({ error: 'Error connection not found' });
@@ -128,8 +146,8 @@ export function createGetMessagesByConnectionIdHandler({ store }: { store: any }
 
 export function connectionRoutes({ store, realtime }: { store: any, realtime: any }) {
 	const router = express.Router();
-	router.post('/connections', createPostConnectionsHandler({ store, realtime }));
-	router.get('/connections/:connectionId', createGetConnectionByIdHandler({ store }));
-	router.get('/connections/:connectionId/messages', createGetMessagesByConnectionIdHandler({ store }));
+	router.post('/connections', postConnections({ store, realtime }));
+	router.get('/connections/:connectionId', getConnectionById({ store }));
+	router.get('/connections/:connectionId/messages', getMessagesByConnectionId({ store }));
 	return router;
 }

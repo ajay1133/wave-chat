@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createPostConnectionsHandler } from '../routes/connections';
+import { postConnections } from '../routes/connections';
 import { createStore } from '../store';
 import { createMockReq, createMockRes } from './mockHttp';
 
@@ -10,14 +10,15 @@ describe('connections routes', () => {
 			emitToUser: vi.fn(),
 			isUserOnline: vi.fn(() => false)
 		};
-		const handler = createPostConnectionsHandler({ store, realtime });
-
+		const handler = postConnections({ store, realtime });
 		const req = createMockReq({
-			body: { initiatorId: 'userId1', recipientId: 'userId2' },
+			body: { 
+                initiatorId: 'userId1', 
+                recipientId: 'userId2' 
+            },
 			header: (name: string) => (name.toLowerCase() === 'x-user-id' ? 'userId1' : undefined)
 		});
 		const res = createMockRes();
-
 		await handler(req, res);
 		expect(res.statusCode ?? 200).toBe(200);
 		expect(res.jsonBody.status).toBe('pending');
