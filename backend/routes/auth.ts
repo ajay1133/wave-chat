@@ -1,7 +1,7 @@
 import express from 'express';
 
-function createLoginHandler({ store }) {
-	return async (req, res) => {
+export function createLoginHandler({ store }: { store: any }) {
+	return async (req: any, res: any) => {
 		const email = req.body.email;
 		const password = req.body.password;
 		if (!email || !password) {
@@ -25,7 +25,7 @@ function createLoginHandler({ store }) {
 	};
 }
 
-export function authRoutes({ store }) {
+export function authRoutes({ store }: { store: any }) {
 	const router = express.Router();
 	router.post('/auth/login', createLoginHandler({ store }));
 	return router;

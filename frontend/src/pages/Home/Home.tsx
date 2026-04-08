@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Alert, Button, Container } from '@mui/material';
-import { mkConn, searchUsers } from '../../api';
+import { createConnection, searchUsers } from '../../api';
 import type { User } from '../../types';
 import { clearUser, getUser } from '../../auth';
 import './Home.css';
@@ -79,7 +79,7 @@ export default function Home() {
     }
     setInfo('');
     try {
-      const { connectionId } = await mkConn(currentUser.id, other.id);
+      const { connectionId } = await createConnection(currentUser.id, other.id);
       const url = `/chat/${connectionId}`;
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e) {

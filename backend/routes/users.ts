@@ -1,6 +1,6 @@
 import express from 'express';
 
-function createSearchUsersHandler({ store }) {
+export function createSearchUsersHandler({ store }: { store: any }) {
 	return async (req, res) => {
 		const { query, excludeUserId, take: qTake } = req.query ?? {};
 		const take = Number(qTake ?? 5);
@@ -13,10 +13,8 @@ function createSearchUsersHandler({ store }) {
 	};
 }
 
-export function usersRoutes({ store }) {
+export function usersRoutes({ store }: { store: any }) {
 	const router = express.Router();
-
 	router.get('/users/search', createSearchUsersHandler({ store }));
-
 	return router;
 }

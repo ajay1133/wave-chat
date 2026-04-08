@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import Home from './Home';
+import Home from '../pages/Home/Home';
 
 const demoUser = { id: 'u1', name: 'User1', email: 'user1@example.com' };
 

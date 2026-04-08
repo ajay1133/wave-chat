@@ -7,9 +7,9 @@ import { connectionRoutes } from './routes/connections';
 import { healthRoutes } from './routes/health';
 import { usersRoutes } from './routes/users';
 import { socketService } from './socketService';
-import { mkStore } from './store';
+import { createStore } from './store';
 
-export function mkApp() {
+export function createApp() {
 	const app = express();
 	const corsOpt = {
 		origin: '*',
@@ -28,7 +28,7 @@ export function mkApp() {
 		cors: { origin: '*', methods: ['GET', 'POST'] }
 	});
 
-	const store = mkStore();
+	const store = createStore();
 	const socketServiceIns = socketService(io, store);
 	socketServiceIns.registerHandlers();
 
