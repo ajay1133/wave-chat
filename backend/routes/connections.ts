@@ -1,6 +1,16 @@
 import express from 'express';
+import type { Request, Response } from 'express';
+import type {
+	ConnectionParams,
+	ErrorResponse,
+	GetConnectionResponse,
+	GetMessagesQuery,
+	GetMessagesResponse,
+	PostConnectionsRequestBody,
+	PostConnectionsResponse
+} from '../types';
 
-function getAuthedUserId(store, req, res) {
+export function getAuthedUserId(store: any, req: Request, res: Response<ErrorResponse>) {
 	const id = req.header('x-user-id');
 	if (!id) {
 		res.status(401).json({ error: 'Error x-user-id is missing' });
@@ -14,14 +24,16 @@ function getAuthedUserId(store, req, res) {
 	return id;
 }
 
-function createPostConnectionsHandler({ store, realtime }) {
-	return async (req, res) => {
-		const authedUserId = getAuthedUserId(store, req, res);
+export function postConnections({ store, realtime }: { store: any, realtime: any }) {
+	return async (
+		req: Request<{}, PostConnectionsResponse | ErrorResponse, PostConnectionsRequestBody>,
+		res: Response<PostConnectionsResponse | ErrorResponse>
+	) => {
+		const authedUserId = getAuthedUserId(store, req, res as Response<ErrorResponse>);
 		if (!authedUserId) {
 			return;
 		}
-		const initiatorId = req.body.initiatorId;
-		const recipientId = req.body.recipientId;
+		const { initiatorId, recipientId } = req.body;
 		if (!initiatorId || !recipientId) {
 			res.status(400).json({ error: 'Error initiatorId or recipientId is missing' });
 			return;
@@ -68,13 +80,16 @@ function createPostConnectionsHandler({ store, realtime }) {
 	};
 }
 
-function createGetConnectionByIdHandler({ store }) {
-	return async (req, res) => {
-		const authedUserId = getAuthedUserId(store, req, res);
+export function getConnectionById({ store }: { store: any }) {
+	return async (
+		req: Request<ConnectionParams, GetConnectionResponse | ErrorResponse>,
+		res: Response<GetConnectionResponse | ErrorResponse>
+	) => {
+		const authedUserId = getAuthedUserId(store, req, res as Response<ErrorResponse>);
 		if (!authedUserId) {
 			return;
 		}
-		const connectionId = req.params.connectionId;
+		const { connectionId } = req.params;
 		const connection = store.chats.getConnectionById(connectionId);
 		if (!connection) {
 			res.status(404).json({ error: 'Error connection not found' });
@@ -101,13 +116,16 @@ function createGetConnectionByIdHandler({ store }) {
 	};
 }
 
-function createGetConnectionMessagesHandler({ store }) {
-	return async (req, res) => {
-		const authedUserId = getAuthedUserId(store, req, res);
+export function getMessagesByConnectionId({ store }: { store: any }) {
+	return async (
+		req: Request<ConnectionParams, GetMessagesResponse | ErrorResponse, {}, GetMessagesQuery>,
+		res: Response<GetMessagesResponse | ErrorResponse>
+	) => {
+		const authedUserId = getAuthedUserId(store, req, res as Response<ErrorResponse>);
 		if (!authedUserId) {
 			return;
 		}
-		const connectionId = req.params.connectionId;
+		const { connectionId } = req.params;
 		const conn = store.chats.getConnectionById(connectionId);
 		if (!conn) {
 			res.status(404).json({ error: 'Error connection not found' });
@@ -119,19 +137,17 @@ function createGetConnectionMessagesHandler({ store }) {
 		}
 		const limit = req.query.limit === undefined ? null : Number(req.query.limit);
 		const before = req.query.before ? new Date(String(req.query.before)) : null;
-		const messages = store.chats.getMessages({ connectionId, before, limit });
+		const messages = store.chats.getMessagesByConnectionId({ connectionId, before, limit });
 		res.json({
 			messages
 		});
 	};
 }
 
-export function connectionRoutes({ store, realtime }) {
+export function connectionRoutes({ store, realtime }: { store: any, realtime: any }) {
 	const router = express.Router();
-
-	router.post('/connections', createPostConnectionsHandler({ store, realtime }));
-	router.get('/connections/:connectionId', createGetConnectionByIdHandler({ store }));
-	router.get('/connections/:connectionId/messages', createGetConnectionMessagesHandler({ store }));
-
+	router.post('/connections', postConnections({ store, realtime }));
+	router.get('/connections/:connectionId', getConnectionById({ store }));
+	router.get('/connections/:connectionId/messages', getMessagesByConnectionId({ store }));
 	return router;
 }
