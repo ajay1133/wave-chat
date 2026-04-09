@@ -28,7 +28,7 @@ export type ConnectionMeta = {
 
 export type LoginResponse = User;
 
-export type CreateConnectionResponse = {
+export type ConnectionResponse = {
   connectionId: string;
   status: ConnectionStatus;
 };

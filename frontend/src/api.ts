@@ -2,7 +2,7 @@ import config from './config';
 import { getUser } from './auth';
 import type {
   ConnectionMeta,
-  CreateConnectionResponse,
+  ConnectionResponse,
   GetMessagesByConnectionIdResponse,
   LoginResponse,
   SearchUsersResponse
@@ -44,7 +44,7 @@ export function login(email: string, password: string): Promise<LoginResponse> {
   return request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
 }
 
-export function createConnection(initiatorId: string, recipientId: string): Promise<CreateConnectionResponse> {
+export function createConnection(initiatorId: string, recipientId: string): Promise<ConnectionResponse> {
   return request('/connections', { method: 'POST', body: JSON.stringify({ initiatorId, recipientId }) });
 }
 
