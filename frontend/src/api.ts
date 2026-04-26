@@ -5,7 +5,9 @@ import type {
   ConnectionResponse,
   GetMessagesByConnectionIdResponse,
   LoginResponse,
-  SearchUsersResponse
+  SearchUsersResponse,
+  User,
+  UserOnlineStatus
 } from './types';
 
 async function request<T>(path: string, init?: any): Promise<T> {
@@ -74,4 +76,8 @@ export function searchUsers(query: string, excludeUserId: string, take = 5): Pro
 
 export function getConnectionMetadata(connectionId: string): Promise<ConnectionMeta> {
   return request(`/connections/${encodeURIComponent(connectionId)}`);
+}
+
+export function updateUser(userId: string, onlineStatus: UserOnlineStatus): Promise<User> {
+  return request(`/users/updateUser/${userId}`, { method: 'PUT', body: JSON.stringify({ onlineStatus }) });
 }

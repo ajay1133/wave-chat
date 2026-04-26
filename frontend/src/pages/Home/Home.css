@@ -23,8 +23,16 @@
 }
 
 .homeSubtitle {
+  float: left;
   font-size: 14px;
   opacity: 0.75;
+}
+
+.homeStatus {
+  float: right;
+  font-size: 14px;
+  opacity: 0.75;
+  margin: 0 0 0 10px;
 }
 
 .homeSearchBlock {
@@ -74,6 +82,31 @@
 
 .homeSuggestion:hover {
   background: rgba(0, 0, 0, 0.04);
+}
+
+.userSuggestion {
+  width: 100%;
+}
+
+.userSuggestionInfo {
+  float: left;
+  width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userSuggestionUserOnlineStatus {
+  float: right;
+  text-align: right;
+  width: 30%;
+}
+
+.available {
+  color: green;
+}
+
+.unavailable {
+  color: red;
 }
 
 .homeHint {

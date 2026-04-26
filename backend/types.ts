@@ -1,7 +1,10 @@
+export type UserOnlineStatus = 'available' | 'away' | 'busy' | 'offline';
+
 export type User = {
 	id: string;
 	email: string;
 	name: string;
+	onlineStatus: UserOnlineStatus;
 	password: string;
 };
 
@@ -9,6 +12,7 @@ export type PublicUser = {
 	id: string;
 	email: string;
 	name: string;
+	onlineStatus: UserOnlineStatus;
 };
 
 export type ConnectionStatus = 'pending' | 'accepted' | 'rejected' | 'ended';
@@ -46,6 +50,7 @@ export type LoginResponse = {
 	id: string;
 	email: string;
 	name: string;
+	onlineStatus: UserOnlineStatus;
 };
 
 export type SearchUsersQuery = {
@@ -89,3 +94,10 @@ export type GetMessagesQuery = {
 export type GetMessagesResponse = {
 	messages: ChatMessage[];
 };
+
+export type UpdateUserResponse = { 
+	id: string;
+	email: string;
+	name: string;
+	onlineStatus: UserOnlineStatus;
+};	
