@@ -108,8 +108,8 @@ export function getConnectionById({ store }: { store: any }) {
 		res.json({
 			id: connection.id,
 			status: connection.status,
-			initiator: { id: initiator.id, email: initiator.email, name: initiator.name },
-			recipient: { id: recipient.id, email: recipient.email, name: recipient.name },
+			initiator: { id: initiator.id, email: initiator.email, name: initiator.name, onlineStatus: initiator.onlineStatus },
+			recipient: { id: recipient.id, email: recipient.email, name: recipient.name, onlineStatus: recipient.onlineStatus },
 			initiatorId: connection.initiatorId,
 			recipientId: connection.recipientId
 		});

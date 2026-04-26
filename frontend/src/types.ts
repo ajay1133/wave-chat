@@ -1,9 +1,12 @@
+export type UserOnlineStatus = 'available' | 'away' | 'busy' | 'offline';
+
 export type ConnectionStatus = 'pending' | 'accepted' | 'rejected' | 'ended';
 
 export type User = {
   id: string;
   email: string;
   name: string;
+  onlineStatus: UserOnlineStatus;
 };
 
 export type ChatMessageKind = 'system' | 'user';

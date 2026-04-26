@@ -13,7 +13,7 @@ export function createApp() {
 	const app = express();
 	const corsOpt = {
 		origin: '*',
-		methods: ['GET', 'POST', 'OPTIONS'],
+		methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
 		allowedHeaders: ['Content-Type', 'x-user-id']
 	};
 	app.use(cors(corsOpt));

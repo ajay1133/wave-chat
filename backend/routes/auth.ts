@@ -21,10 +21,12 @@ export function loginUser({ store }: { store: any }) {
 			res.status(401).json({ error: 'Error invalid password' });
 			return;
 		}
+		user.onlineStatus = 'available';
 		res.json({
 			id: user.id,
 			email: user.email,
-			name: user.name
+			name: user.name,
+			onlineStatus: user.onlineStatus
 		});
 	};
 }

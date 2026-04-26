@@ -176,7 +176,9 @@ export default function Chat({ socket }: { socket: any }) {
       : connectionMetadata.initiatorId === currentUser.id
         ? connectionMetadata.recipient
         : connectionMetadata.initiator;
-  const canSend = !ended && !!connectionMetadata && connectionMetadata.status === 'accepted';
+  
+        const canSend = !ended && !!connectionMetadata && connectionMetadata.status === 'accepted';
+
   return (
     <Container maxWidth="sm" className="chatPage">
       <div className="chatLayout">

@@ -3,30 +3,35 @@
 		"id": "userId1",
 		"email": "testUser1@test.com",
 		"name": "Test User1",
+		"onlineStatus": "offline",
 		"password": "testUser1"
 	},
 	{
 		"id": "userId2",
 		"email": "testUser2@test.com",
 		"name": "Test User2",
+		"onlineStatus": "offline",
 		"password": "testUser2"
 	},
 	{
 		"id": "userId3",
 		"email": "testUser3@test.com",
 		"name": "Test User3",
+		"onlineStatus": "offline",
 		"password": "testUser3"
 	},
 	{
 		"id": "userId4",
 		"email": "testUser4@test.com",
 		"name": "Test User4",
+		"onlineStatus": "offline",
 		"password": "testUser4"
 	},
 	{
 		"id": "userId5",
 		"email": "testUser5@test.com",
 		"name": "Test User5",
+		"onlineStatus": "offline",
 		"password": "testUser5"
 	}
 ]
